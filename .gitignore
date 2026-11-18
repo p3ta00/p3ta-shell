@@ -1,0 +1,11 @@
+*.log
+*.sock
+session.json
+release-notes.json
+*.bak
+*.bak-*
+.zsh_history
+.target.env
+credentials.json
+vault.key
+__pycache__/

@@ -1,0 +1,11 @@
+onboarding = false
+
+[theme]
+name = "tokyo-night"
+auto_switch = false
+
+[keys]
+prefix = "ctrl+a"
+split_vertical = "prefix+n"
+split_horizontal = "prefix+m"
+rename_tab = "prefix+comma"
