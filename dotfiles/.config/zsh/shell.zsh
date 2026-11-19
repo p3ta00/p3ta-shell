@@ -107,8 +107,19 @@ alias gd='git diff'
 HISTFILE=~/.zsh_history
 HISTSIZE=50000
 SAVEHIST=50000
-setopt SHARE_HISTORY INC_APPEND_HISTORY HIST_IGNORE_ALL_DUPS HIST_FIND_NO_DUPS HIST_REDUCE_BLANKS
+# SHARE_HISTORY writes accepted commands immediately and imports commands from
+# other Herdr panes. INC_APPEND_HISTORY conflicts with SHARE_HISTORY, so keep it
+# disabled and explicitly import newly appended entries before every prompt.
+setopt EXTENDED_HISTORY SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_FIND_NO_DUPS HIST_REDUCE_BLANKS
+unsetopt INC_APPEND_HISTORY INC_APPEND_HISTORY_TIME
 unsetopt HIST_VERIFY
+
+_p3ta_history_sync() {
+  fc -RI "$HISTFILE" 2>/dev/null || true
+}
+if typeset -f add-zsh-hook >/dev/null 2>&1; then
+  add-zsh-hook precmd _p3ta_history_sync
+fi
 # Import HISTFILE now. zsh -c skips this; a real interactive shell needs it
 # especially after converting mixed old/extended history formats.
 if [[ -o interactive && -f "$HISTFILE" ]]; then

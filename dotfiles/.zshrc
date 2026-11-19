@@ -75,8 +75,8 @@ else
   compinit -d "$HOME/.cache/zcompdump"
 fi
 
-# ── Exegol overlay (starship, zoxide, eza/bat aliases, history) ────────────
-[[ -f "$HOME/.config/zsh/exegol.zsh" ]] && source "$HOME/.config/zsh/exegol.zsh"
+# ── Shell overlay (Starship, Zoxide, aliases, shared history) ───────────────
+[[ -f "$HOME/.config/zsh/shell.zsh" ]] && source "$HOME/.config/zsh/shell.zsh"
 
 # Added by cua-driver-rs installer — see https://github.com/trycua/cua
 export PATH="$HOME/.local/bin:$PATH"
