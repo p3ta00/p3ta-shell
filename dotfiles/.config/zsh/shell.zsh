@@ -148,6 +148,11 @@ bindkey '^[[A' $_hist_up
 bindkey '^[[B' $_hist_down
 bindkey '^[OA' $_hist_up
 bindkey '^[OB' $_hist_down
+# Herdr/Kitty keyboard protocol emits explicit unmodified parameters.
+bindkey '^[[1A'   $_hist_up
+bindkey '^[[1B'   $_hist_down
+bindkey '^[[1;1A' $_hist_up
+bindkey '^[[1;1B' $_hist_down
 # extra CSI variants from Tabby / Windows Terminal / Ghostty
 bindkey '^[[1;2A' $_hist_up
 bindkey '^[[1;2B' $_hist_down
