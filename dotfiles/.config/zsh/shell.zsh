@@ -132,15 +132,10 @@ autoload -U up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 
-HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
-HISTORY_SUBSTRING_SEARCH_FUZZY=
-if typeset -f history-substring-search-up >/dev/null 2>&1; then
-  _hist_up=history-substring-search-up
-  _hist_down=history-substring-search-down
-else
-  _hist_up=up-line-or-beginning-search
-  _hist_down=down-line-or-beginning-search
-fi
+# Use Zsh's native history widgets. The substring-search plugin could leave the
+# arrows inert after shared-history imports in long-lived Herdr panes.
+_hist_up=up-line-or-history
+_hist_down=down-line-or-history
 
 bindkey '^P'  $_hist_up
 bindkey '^N'  $_hist_down

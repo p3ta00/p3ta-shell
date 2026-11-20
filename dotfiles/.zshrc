@@ -61,7 +61,6 @@ plugins=(
   zsh-completions
   zsh-autosuggestions
   zsh-syntax-highlighting
-  zsh-history-substring-search   # after highlighting; type nxc then Up
 )
 
 # OMZ fzf plugin: binary is in PATH (~/.local/bin or /usr/bin)
