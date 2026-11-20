@@ -18,20 +18,6 @@ done
 
 run() { printf '+ '; printf '%q ' "$@"; printf '\n'; (( DRY_RUN )) || "$@"; }
 as_user() { if [[ $(id -u) -eq 0 && "$TARGET_USER" != root ]]; then run sudo -u "$TARGET_USER" -H "$@"; else run "$@"; fi; }
-backup_path() {
-  local p="$1"
-  [[ ! -e "$p" && ! -L "$p" ]] && return 0
-  local stamp; stamp="$(date +%Y%m%d-%H%M%S)"
-  run mv "$p" "${p}.p3ta-shell-${stamp}.bak"
-}
-install_dotfile() {
-  local rel="$1" src="$REPO_DIR/dotfiles/$1" dst="$TARGET_HOME/$1"
-  run mkdir -p "$(dirname "$dst")"
-  backup_path "$dst"
-  run cp -a "$src" "$dst"
-  run chown -R "$TARGET_USER:$TARGET_USER" "$dst"
-}
-
 [[ -r /etc/os-release ]] || { echo 'Unsupported system: /etc/os-release missing' >&2; exit 1; }
 . /etc/os-release
 [[ "${ID:-}" == kali || "${ID_LIKE:-}" == *debian* ]] || echo "Warning: designed for Kali/Debian, found ${ID:-unknown}" >&2
@@ -117,14 +103,14 @@ if [[ ! -f "$FONT_DIR/JetBrainsMonoNerdFont-Regular.ttf" ]]; then
   run fc-cache -f
 fi
 
-for item in .zshrc .zprofile .config/starship.toml .config/zsh .config/herdr .config/nvim .config/zellij .config/alacritty; do
-  install_dotfile "$item"
-done
+# Install the inactive configuration payload and command. No dotfiles, login
+# shell, or editor configuration are changed until `p3ta-shell enable` runs.
+PAYLOAD_DIR="$TARGET_HOME/.local/share/p3ta-shell"
+run rm -rf "$PAYLOAD_DIR"
+run mkdir -p "$PAYLOAD_DIR"
+run cp -a "$REPO_DIR/dotfiles" "$PAYLOAD_DIR/dotfiles"
+run install -m 0755 "$REPO_DIR/bin/p3ta-shell" "$TARGET_HOME/.local/bin/p3ta-shell"
+run chown -R "$TARGET_USER:$TARGET_USER" "$PAYLOAD_DIR" "$TARGET_HOME/.local/bin/p3ta-shell"
 
-run chsh -s /usr/bin/zsh "$TARGET_USER"
-
-# Prime NvChad plugins headlessly; a network hiccup should not erase configs.
-as_user nvim --headless '+Lazy! sync' +qa || echo 'Warning: NvChad plugin sync failed; run nvim later to retry.' >&2
-
-printf '\nInstalled p3ta-shell for %s. Start a new login shell with: exec zsh -l\n' "$TARGET_USER"
-printf 'Herdr shortcuts: Ctrl+A then N (vertical), Ctrl+A then M (horizontal), Ctrl+A then comma (rename tab).\n'
+printf '\nInstalled p3ta-shell requirements for %s without changing dotfiles.\n' "$TARGET_USER"
+printf 'Activate the complete configuration later with: p3ta-shell enable\n'

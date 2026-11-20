@@ -1,6 +1,6 @@
 # p3ta-shell
 
-One-command Kali/Debian terminal workstation bootstrap. It installs the same shell tools, Tokyo Night neon theme, prompt, editor, multiplexer, and keyboard behavior used by p3ta's Kali environment.
+Two-stage Kali/Debian terminal workstation bootstrap. The installer installs every requirement without touching your current dotfiles. Run `p3ta-shell enable` later to activate p3ta's complete theme, prompt, editor, multiplexer, and keyboard configuration.
 
 ## Included
 
@@ -20,6 +20,8 @@ cd p3ta-shell
 ./install.sh
 ```
 
+This stage installs the applications, plugins, font, and an inactive copy of the configuration. It does **not** replace dotfiles, change the login shell, or initialize NvChad.
+
 To also install Kali's full default tool metapackage:
 
 ```bash
@@ -32,7 +34,26 @@ Preview actions without modifying the machine:
 ./install.sh --dry-run
 ```
 
-The installer is idempotent. Existing managed files are timestamped as `*.p3ta-shell-YYYYmmdd-HHMMSS.bak` before replacement.
+## Enable the configuration
+
+When you are ready to load the dotfiles and themes:
+
+```bash
+p3ta-shell enable
+```
+
+This activates Zsh, Starship, Alacritty, Herdr, NvChad, and Zellij configuration, changes the login shell to Zsh, and synchronizes NvChad plugins. Existing managed files are first timestamped as `*.p3ta-shell-*.bak`.
+
+Useful commands:
+
+```bash
+p3ta-shell status
+p3ta-shell enable --dry-run
+p3ta-shell enable --no-chsh
+p3ta-shell enable --no-sync
+```
+
+The installer and enable command are idempotent. Running `enable` again backs up the currently active files before refreshing them from the installed payload.
 
 ## Herdr keys
 
@@ -47,5 +68,5 @@ Prefix is `Ctrl+A`.
 ## Notes
 
 - Run on a fresh Kali/Debian install as your normal user; the script elevates with `sudo`.
-- NvChad plugins are synced headlessly during install and can retry on first `nvim` launch.
+- NvChad plugins are synced by `p3ta-shell enable` and can retry on first `nvim` launch.
 - No histories, credentials, SSH keys, logs, sockets, or machine-specific secrets are included.

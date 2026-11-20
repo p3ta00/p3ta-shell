@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+COMMAND="${1:-help}"
+shift || true
+
+PAYLOAD_DIR="${P3TA_SHELL_PAYLOAD:-$HOME/.local/share/p3ta-shell}"
+DOTFILES_DIR="$PAYLOAD_DIR/dotfiles"
+NO_CHSH=0
+NO_SYNC=0
+DRY_RUN=0
+
+usage() {
+  cat <<'EOF'
+Usage: p3ta-shell <command> [options]
+
+Commands:
+  enable       Back up current files and activate p3ta-shell dotfiles
+  status       Show whether all managed dotfiles are active
+  help         Show this help
+
+Enable options:
+  --no-chsh    Do not change the login shell to Zsh
+  --no-sync    Do not synchronize NvChad plugins
+  --dry-run    Print configuration actions without changing files
+EOF
+}
+
+run() {
+  printf '+ '
+  printf '%q ' "$@"
+  printf '\n'
+  (( DRY_RUN )) || "$@"
+}
+
+managed_items=(
+  .zshrc
+  .zprofile
+  .config/starship.toml
+  .config/zsh
+  .config/herdr
+  .config/nvim
+  .config/zellij
+  .config/alacritty
+)
+
+backup_path() {
+  local path="$1" stamp
+  [[ ! -e "$path" && ! -L "$path" ]] && return 0
+  stamp="$(date +%Y%m%d-%H%M%S-%N)"
+  run mv "$path" "${path}.p3ta-shell-${stamp}.bak"
+}
+
+install_dotfile() {
+  local rel="$1" src="$DOTFILES_DIR/$1" dst="$HOME/$1"
+  [[ -e "$src" ]] || { printf 'Missing payload: %s\n' "$src" >&2; exit 1; }
+  run mkdir -p "$(dirname "$dst")"
+  backup_path "$dst"
+  run cp -a "$src" "$dst"
+}
+
+enable() {
+  while (($#)); do
+    case "$1" in
+      --no-chsh) NO_CHSH=1 ;;
+      --no-sync) NO_SYNC=1 ;;
+      --dry-run) DRY_RUN=1 ;;
+      -h|--help) usage; exit 0 ;;
+      *) printf 'Unknown enable option: %s\n' "$1" >&2; exit 2 ;;
+    esac
+    shift
+  done
+
+  [[ -d "$DOTFILES_DIR" ]] || {
+    printf 'p3ta-shell payload not found at %s\nRun install.sh first.\n' "$DOTFILES_DIR" >&2
+    exit 1
+  }
+
+  local item
+  for item in "${managed_items[@]}"; do
+    install_dotfile "$item"
+  done
+
+  if (( ! NO_CHSH )); then
+    if command -v zsh >/dev/null 2>&1 && [[ "${SHELL:-}" != "$(command -v zsh)" ]]; then
+      run chsh -s "$(command -v zsh)" "$(id -un)"
+    fi
+  fi
+
+  if (( ! NO_SYNC )); then
+    if command -v nvim >/dev/null 2>&1; then
+      nvim --headless '+Lazy! sync' +qa || printf 'Warning: NvChad sync failed; run nvim later to retry.\n' >&2
+    fi
+  fi
+
+  printf '\np3ta-shell configuration enabled. Start a new shell with: exec zsh -l\n'
+}
+
+status() {
+  local item missing=0
+  for item in "${managed_items[@]}"; do
+    if [[ -e "$HOME/$item" ]]; then
+      printf 'enabled  %s\n' "$item"
+    else
+      printf 'missing  %s\n' "$item"
+      missing=1
+    fi
+  done
+  (( missing == 0 ))
+}
+
+case "$COMMAND" in
+  enable) enable "$@" ;;
+  status) status ;;
+  help|-h|--help) usage ;;
+  *) printf 'Unknown command: %s\n\n' "$COMMAND" >&2; usage >&2; exit 2 ;;
+esac
