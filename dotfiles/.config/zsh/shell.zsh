@@ -114,17 +114,9 @@ setopt EXTENDED_HISTORY SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_FIND_NO_DUPS HIS
 unsetopt INC_APPEND_HISTORY INC_APPEND_HISTORY_TIME
 unsetopt HIST_VERIFY
 
-_p3ta_history_sync() {
-  fc -RI "$HISTFILE" 2>/dev/null || true
-}
-if typeset -f add-zsh-hook >/dev/null 2>&1; then
-  add-zsh-hook precmd _p3ta_history_sync
-fi
-# Import HISTFILE now. zsh -c skips this; a real interactive shell needs it
-# especially after converting mixed old/extended history formats.
-if [[ -o interactive && -f "$HISTFILE" ]]; then
-  fc -R "$HISTFILE" 2>/dev/null || true
-fi
+# SHARE_HISTORY writes and imports commands between interactive panes. Do not
+# call `fc -R`/`fc -RI` before every prompt: repeatedly resetting the history
+# list leaves ZLE's Up/Down cursor at the wrong event in long-lived panes.
 
 # ── Keybindings: type "nxc" then Up to walk matching history ───────────────
 bindkey -e
