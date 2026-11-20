@@ -75,6 +75,12 @@ if ! typeset -f fzf-history-widget >/dev/null 2>&1; then
   unset _fzf_kb
 fi
 
+# ── Paths ──────────────────────────────────────────────────────────────────
+# Keep locally installed administrative helpers available after WSL auto-root.
+typeset -U path PATH
+path=(/usr/local/sbin /usr/local/bin "$HOME/.local/bin" $path)
+export PATH
+
 # ── Aliases ────────────────────────────────────────────────────────────────
 BIN="$HOME/.local/bin"
 alias home='cd ~'
